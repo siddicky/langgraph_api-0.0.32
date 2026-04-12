@@ -62,6 +62,9 @@ class BatchedStore(AsyncBatchedBaseStore):
     async def abatch(self, ops: Iterable[Op]) -> list[Result]:
         return await self._store.abatch(ops)
 
+    async def start_ttl_sweeper(self) -> asyncio.Task[None]:
+        return await self._store.start_ttl_sweeper()
+
     def close(self) -> None:
         self._store.close()
 

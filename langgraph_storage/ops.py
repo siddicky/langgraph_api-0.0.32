@@ -16,7 +16,7 @@ from uuid import UUID, uuid4
 
 import structlog
 from langgraph.pregel.debug import CheckpointPayload
-from langgraph.pregel.types import StateSnapshot
+from langgraph.types import StateSnapshot
 from langgraph_sdk import Auth
 from starlette.exceptions import HTTPException
 
@@ -983,6 +983,7 @@ class Threads(Authenticated):
                     created_at=None,
                     parent_config=None,
                     tasks=tuple(),
+                    interrupts=(),
                 )
 
             metadata = thread.get("metadata", {})
@@ -1011,6 +1012,7 @@ class Threads(Authenticated):
                     created_at=None,
                     parent_config=None,
                     tasks=tuple(),
+                    interrupts=(),
                 )
 
         @staticmethod
@@ -1092,7 +1094,7 @@ class Threads(Authenticated):
         ) -> ThreadUpdateResponse:
             """Update a thread with a batch of state updates."""
 
-            from langgraph.pregel.types import StateUpdate
+            from langgraph.types import StateUpdate
 
             thread_id = _ensure_uuid(config["configurable"]["thread_id"])
             filters = await Threads.handle_event(

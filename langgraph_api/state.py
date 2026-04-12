@@ -57,6 +57,7 @@ def state_snapshot_to_thread_state(state: StateSnapshot) -> ThreadState:
         "created_at": state.created_at,
         "checkpoint": runnable_config_to_checkpoint(state.config),
         "parent_checkpoint": runnable_config_to_checkpoint(state.parent_config),
+        "interrupts": list(getattr(state, "interrupts", [])),
         # below are deprecated
         "checkpoint_id": state.config["configurable"].get("checkpoint_id")
         if state.config

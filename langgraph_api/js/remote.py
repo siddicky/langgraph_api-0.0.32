@@ -21,7 +21,7 @@ from langchain_core.runnables.schema import (
     StreamEvent,
 )
 from langgraph.checkpoint.serde.base import SerializerProtocol
-from langgraph.pregel.types import PregelTask, StateSnapshot
+from langgraph.types import PregelTask, StateSnapshot
 from langgraph.store.base import GetOp, Item, ListNamespacesOp, PutOp, SearchOp
 from langgraph.types import Command, Interrupt
 from pydantic import BaseModel
@@ -206,6 +206,7 @@ class RemotePregel(BaseRemotePregel):
             item.get("createdAt"),
             item.get("parentConfig"),
             _convert_tasks(item.get("tasks", [])),
+            tuple(item.get("interrupts", [])),
         )
 
     async def aget_state(

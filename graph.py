@@ -16,7 +16,7 @@ from uuid import UUID, uuid5
 import structlog
 from langchain_core.runnables.config import run_in_executor
 from langgraph.checkpoint.base import BaseCheckpointSaver
-from langgraph.graph import Graph
+from langgraph.graph import StateGraph
 from langgraph.pregel import Pregel
 from langgraph.store.base import BaseStore
 from starlette.exceptions import HTTPException
@@ -29,8 +29,8 @@ if TYPE_CHECKING:
 
 logger = structlog.stdlib.get_logger(__name__)
 
-GraphFactoryFromConfig = Callable[[Config], Pregel | Graph]
-GraphFactory = Callable[[], Pregel | Graph]
+GraphFactoryFromConfig = Callable[[Config], Pregel | StateGraph]
+GraphFactory = Callable[[], Pregel | StateGraph]
 GraphValue = Pregel | GraphFactory
 
 
@@ -97,7 +97,7 @@ async def get_graph(
         value = value(config) if FACTORY_ACCEPTS_CONFIG[graph_id] else value()
 
     async with _generate_graph(value) as graph_obj:
-        if isinstance(graph_obj, Graph):
+        if isinstance(graph_obj, StateGraph):
             graph_obj = graph_obj.compile()
         if not isinstance(graph_obj, Pregel | BaseRemotePregel):
             raise HTTPException(
@@ -326,7 +326,7 @@ def _graph_from_spec(spec: GraphSpec) -> GraphValue:
                 likely = [
                     k
                     for k in available
-                    if isinstance(module.__dict__[k], Graph | Pregel)
+                    if isinstance(module.__dict__[k], StateGraph | Pregel)
                 ]
                 if likely:
                     prefix = spec.module or spec.path
@@ -355,7 +355,7 @@ def _graph_from_spec(spec: GraphSpec) -> GraphValue:
                 raise ValueError(
                     f"Graph factory function '{spec.variable}' in module '{spec.path}' must take exactly one argument, a RunnableConfig"
                 )
-        elif isinstance(graph, Graph):
+        elif isinstance(graph, StateGraph):
             graph = graph.compile()
         elif isinstance(graph, Pregel):
             pass
@@ -373,7 +373,7 @@ def _graph_from_spec(spec: GraphSpec) -> GraphValue:
                 break
         else:
             for _, member in inspect.getmembers(module):
-                if isinstance(member, Graph):
+                if isinstance(member, StateGraph):
                     graph = member.compile()
                     break
             else:
