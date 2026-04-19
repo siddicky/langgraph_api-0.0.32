@@ -26,6 +26,15 @@ dependencies = [
     "pyjwt>=2.9.0",
     "cryptography>=43.0.3",
     "langgraph-sdk>=0.3.0",
+    "croniter>=1.4.1,<2",
+]
+
+[project.optional-dependencies]
+postgres = [
+    "psycopg[binary]>=3.1.0,<4",
+    "psycopg-pool>=3.1.0,<4",
+    "coredis>=4.13.2,<4.20",
+    "langgraph-checkpoint-postgres>=3.0.0,<4",
 ]
 
 [project.scripts]

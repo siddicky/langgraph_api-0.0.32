@@ -11,8 +11,23 @@ class RetryableException(Exception):
     pass
 
 
-RETRIABLE_EXCEPTIONS: tuple[type[BaseException], ...] = (RetryableException,)
-OVERLOADED_EXCEPTIONS: tuple[type[BaseException], ...] = ()
+try:
+    from psycopg.errors import ConnectionTimeout, InternalError, OperationalError
+    from psycopg_pool.errors import PoolTimeout, TooManyRequests
+
+    RETRIABLE_EXCEPTIONS: tuple[type[BaseException], ...] = (
+        OperationalError,
+        InternalError,
+        RetryableException,
+    )
+    OVERLOADED_EXCEPTIONS: tuple[type[BaseException], ...] = (
+        PoolTimeout,
+        ConnectionTimeout,
+        TooManyRequests,
+    )
+except ImportError:
+    RETRIABLE_EXCEPTIONS: tuple[type[BaseException], ...] = (RetryableException,)
+    OVERLOADED_EXCEPTIONS: tuple[type[BaseException], ...] = ()
 
 
 def retry_db(func: Callable[P, T]) -> Callable[P, T]:
