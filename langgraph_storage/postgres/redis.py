@@ -19,8 +19,8 @@ from langgraph_api.config import (
 logger = structlog.stdlib.get_logger(__name__)
 
 # main thread redis clients
-_aredis: coredis.Redis[bytes] | coredis.RedisCluster[bytes]
-_aredis_noretry: coredis.Redis[bytes] | coredis.RedisCluster[bytes]
+_aredis: coredis.Redis[bytes] | coredis.RedisCluster[bytes] | None = None
+_aredis_noretry: coredis.Redis[bytes] | coredis.RedisCluster[bytes] | None = None
 _stats_task: asyncio.Task | None = None
 
 # Thread-local storage for per-thread Redis clients
@@ -61,7 +61,7 @@ async def start_redis() -> None:
 
 
 async def stop_redis() -> None:
-    global _stats_task
+    global _aredis, _aredis_noretry, _stats_task
 
     if _stats_task is not None:
         _stats_task.cancel()
@@ -72,8 +72,10 @@ async def stop_redis() -> None:
         finally:
             _stats_task = None
 
-    if "_aredis" in globals():
-        _aredis.connection_pool.disconnect()
+    if _aredis is not None:
+        await _aredis.connection_pool.disconnect()
+        _aredis = None
+        _aredis_noretry = None
 
 
 async def stats_loop() -> None:
@@ -96,6 +98,8 @@ def redis_stats() -> dict[str, int]:
 
 def get_redis() -> coredis.Redis[bytes] | coredis.RedisCluster[bytes]:
     if threading.current_thread() is threading.main_thread():
+        if _aredis is None:
+            raise RuntimeError("Redis client is not initialized. Call start_redis() first.")
         return _aredis
     else:
         # Create a new Redis client for this thread if it doesn't exist
@@ -120,6 +124,10 @@ def get_redis() -> coredis.Redis[bytes] | coredis.RedisCluster[bytes]:
 
 def get_redis_noretry() -> coredis.Redis[bytes] | coredis.RedisCluster[bytes]:
     if threading.current_thread() is threading.main_thread():
+        if _aredis_noretry is None:
+            raise RuntimeError(
+                "Redis no-retry client is not initialized. Call start_redis() first."
+            )
         return _aredis_noretry
     else:
         # Create a new Redis client for this thread if it doesn't exist

@@ -84,7 +84,7 @@ def set_store_config(config: dict) -> None:
         _STORE_CONFIG["index"]["embed"] = resolve_embeddings(index_config)
     # Re-create the store
     STORE.close()
-    STORE = DiskBackedInMemStore(index=index_config)
+    STORE = DiskBackedInMemStore(index=index_config or {})
 
 
 def Store(*args: Any, **kwargs: Any) -> DiskBackedInMemStore:

@@ -156,8 +156,9 @@ async def migrate() -> None:
             for i, stmt in enumerate(statements):
                 if i > 0:
                     stmt = "CREATE INDEX CONCURRENTLY" + stmt
-                if stmt.strip():
-                    await cur.execute(stmt.strip(), prepare=False)
+                stmt = stmt.strip()
+                if stmt:
+                    await cur.execute(stmt, prepare=False)
             await cur.execute(
                 "INSERT INTO schema_migrations (version, dirty) VALUES (%s, %s)",
                 (version, False),
