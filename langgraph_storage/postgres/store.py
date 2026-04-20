@@ -94,7 +94,7 @@ async def setup_vector_index(store: PGSTore) -> None:
 _STORE = threading.local()
 
 
-def start_store(pool: AsyncConnectionPool[AsyncConnection[DictRow]]) -> None:
+def start_store(pool: AsyncConnectionPool[AsyncConnection[DictRow]]) -> PGSTore:
     _STORE.store = PGSTore(conn=pool)
     return _STORE.store
 
