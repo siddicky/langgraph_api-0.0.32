@@ -79,10 +79,12 @@ BATCHED_STORE = threading.local()
 def set_store_config(config: dict) -> None:
     global _STORE_CONFIG, STORE
     _STORE_CONFIG = config.copy()
-    _STORE_CONFIG["index"]["embed"] = resolve_embeddings(_STORE_CONFIG.get("index", {}))
+    index_config = _STORE_CONFIG.get("index", {})
+    if index_config:
+        _STORE_CONFIG["index"]["embed"] = resolve_embeddings(index_config)
     # Re-create the store
     STORE.close()
-    STORE = DiskBackedInMemStore(index=_STORE_CONFIG.get("index", {}))
+    STORE = DiskBackedInMemStore(index=index_config)
 
 
 def Store(*args: Any, **kwargs: Any) -> DiskBackedInMemStore:

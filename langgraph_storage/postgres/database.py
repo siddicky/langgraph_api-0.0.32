@@ -156,7 +156,8 @@ async def migrate() -> None:
             for i, stmt in enumerate(statements):
                 if i > 0:
                     stmt = "CREATE INDEX CONCURRENTLY" + stmt
-                await cur.execute(stmt.strip(), prepare=False)
+                if stmt.strip():
+                    await cur.execute(stmt.strip(), prepare=False)
             await cur.execute(
                 "INSERT INTO schema_migrations (version, dirty) VALUES (%s, %s)",
                 (version, False),
@@ -186,22 +187,11 @@ async def migrate_vector_index():
 
 async def start_pool() -> None:
     global _pg_pool, _stats_task
-    print('1')
     _pg_pool = create_pool()
-    print('2')
-    # confirm connectivity
     await _pg_pool.open(wait=True)
-    print('3')
-    # migrate database
     await migrate()
-    print('4')
     await migrate_vector_index()
-
-    print('5')
-    # start stats loop
     _stats_task = asyncio.create_task(stats_loop())
-    print('6')
-    # start redis
     await start_redis()
 
 

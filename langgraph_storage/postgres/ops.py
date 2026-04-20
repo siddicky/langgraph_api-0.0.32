@@ -2002,9 +2002,6 @@ LIMIT 1
 
         cur = await conn.execute(query, params, binary=True)
         result = [row async for row in cur]
-        all_results = []
-        async for r in await conn.execute("SELECT * FROM cron WHERE 1 = 1"):
-            all_results.append(r)
 
         async def consume():
             for row in result:

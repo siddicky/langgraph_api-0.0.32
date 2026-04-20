@@ -36,7 +36,12 @@ _cls_cl = coredis.RedisCluster if REDIS_CLUSTER else coredis.Redis
 async def start_redis() -> None:
     global _aredis, _aredis_noretry, _stats_task
 
-    # create a redis connection pool
+    if not REDIS_URI:
+        raise ValueError(
+            "REDIS_URI is required when using the Postgres backend. "
+            "Set the REDIS_URI environment variable to a valid Redis connection string."
+        )
+
     _aredis_pool = _cls_cp.from_url(
         REDIS_URI,
         max_connections=REDIS_MAX_CONNECTIONS,
@@ -57,7 +62,11 @@ async def start_redis() -> None:
 
 
 async def stop_redis() -> None:
-    _stats_task.cancel()
+    try:
+        _stats_task.cancel()
+        await _stats_task
+    except asyncio.CancelledError:
+        pass
     _aredis.connection_pool.disconnect()
 
 
