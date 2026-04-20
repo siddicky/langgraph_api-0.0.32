@@ -154,11 +154,12 @@ async def migrate() -> None:
             # Split by create index concurrently statements to ensure they are executed in separate transactions
             statements = re.split(r"(?i)create\s+index\s+concurrently", sql)
             for i, stmt in enumerate(statements):
-                if i > 0:
-                    stmt = "CREATE INDEX CONCURRENTLY" + stmt
                 stmt = stmt.strip()
-                if stmt:
-                    await cur.execute(stmt, prepare=False)
+                if not stmt:
+                    continue
+                if i > 0:
+                    stmt = "CREATE INDEX CONCURRENTLY " + stmt
+                await cur.execute(stmt, prepare=False)
             await cur.execute(
                 "INSERT INTO schema_migrations (version, dirty) VALUES (%s, %s)",
                 (version, False),
