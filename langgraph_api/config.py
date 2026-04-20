@@ -112,7 +112,7 @@ STATS_INTERVAL_SECS = env("STATS_INTERVAL_SECS", cast=int, default=60)
 
 # storage
 
-DATABASE_URI = env("DATABASE_URI", cast=str, default=getenv("POSTGRES_URI", undefined))
+DATABASE_URI = env("DATABASE_URI", cast=str, default=getenv("POSTGRES_URI", None))
 MIGRATIONS_PATH = env("MIGRATIONS_PATH", cast=str, default="/storage/migrations")
 
 
@@ -128,7 +128,7 @@ def _get_encryption_key(key_str: str | None):
 LANGGRAPH_AES_KEY = env("LANGGRAPH_AES_KEY", default=None, cast=_get_encryption_key)
 
 # redis
-REDIS_URI = env("REDIS_URI", cast=str)
+REDIS_URI = env("REDIS_URI", cast=str, default=None)
 REDIS_CLUSTER = env("REDIS_CLUSTER", cast=bool, default=False)
 REDIS_MAX_CONNECTIONS = env("REDIS_MAX_CONNECTIONS", cast=int, default=500)
 REDIS_CONNECT_TIMEOUT = env("REDIS_CONNECT_TIMEOUT", cast=float, default=10.0)
