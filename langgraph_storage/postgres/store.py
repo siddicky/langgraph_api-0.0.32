@@ -96,6 +96,7 @@ _STORE = threading.local()
 
 def start_store(pool: AsyncConnectionPool[AsyncConnection[DictRow]]) -> None:
     _STORE.store = PGSTore(conn=pool)
+    return _STORE.store
 
 
 def Store(*args: Any, **kwargs: Any) -> PGSTore:

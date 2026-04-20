@@ -21,7 +21,7 @@ logger = structlog.stdlib.get_logger(__name__)
 # main thread redis clients
 _aredis: coredis.Redis[bytes] | coredis.RedisCluster[bytes]
 _aredis_noretry: coredis.Redis[bytes] | coredis.RedisCluster[bytes]
-_stats_task: asyncio.Task
+_stats_task: asyncio.Task | None = None
 
 # Thread-local storage for per-thread Redis clients
 _thread_local = threading.local()
@@ -35,8 +35,7 @@ _cls_cl = coredis.RedisCluster if REDIS_CLUSTER else coredis.Redis
 
 async def start_redis() -> None:
     global _aredis, _aredis_noretry, _stats_task
-
-    if not REDIS_URI:
+    if not REDIS_URI or not REDIS_URI.strip():
         raise ValueError(
             "REDIS_URI is required when using the Postgres backend. "
             "Set the REDIS_URI environment variable to a valid Redis connection string."
@@ -62,12 +61,19 @@ async def start_redis() -> None:
 
 
 async def stop_redis() -> None:
-    try:
+    global _stats_task
+
+    if _stats_task is not None:
         _stats_task.cancel()
-        await _stats_task
-    except asyncio.CancelledError:
-        pass
-    _aredis.connection_pool.disconnect()
+        try:
+            await _stats_task
+        except asyncio.CancelledError:
+            pass
+        finally:
+            _stats_task = None
+
+    if "_aredis" in globals():
+        _aredis.connection_pool.disconnect()
 
 
 async def stats_loop() -> None:
